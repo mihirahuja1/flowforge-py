@@ -1,0 +1,31 @@
+{
+    "name": "ai-workflow-builder",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Open-source visual workflow builder for AI automation",
+    "workspaces": [
+        "apps/*",
+        "packages/*"
+    ],
+    "scripts": {
+        "build": "turbo run build",
+        "dev": "turbo run dev",
+        "lint": "turbo run lint",
+        "test": "turbo run test",
+        "type-check": "turbo run type-check",
+        "clean": "turbo run clean",
+        "docker:up": "docker-compose up -d",
+        "docker:down": "docker-compose down",
+        "docker:build": "docker-compose build"
+    },
+    "devDependencies": {
+        "turbo": "^1.10.0",
+        "nx": "^16.0.0",
+        "@nx/workspace": "^16.0.0"
+    },
+    "engines": {
+        "node": ">=18.0.0",
+        "pnpm": ">=8.0.0"
+    },
+    "packageManager": "pnpm@8.6.0"
+}
