@@ -12,6 +12,7 @@ import {
   ReactFlowProvider,
   Handle,
   Position,
+  MarkerType,
   type Connection,
   type Edge,
   type Node,
@@ -461,9 +462,45 @@ function Canvas() {
     { id: generateNodeId(), position: { x: 700, y: 200 }, data: { label: 'End' }, type: 'output' },
   ]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([
-    { id: 'e12', source: nodes[0]?.id || 'node_1', target: nodes[1]?.id || 'node_2' },
-    { id: 'e23', source: nodes[1]?.id || 'node_2', target: nodes[2]?.id || 'node_3' },
-    { id: 'e34', source: nodes[2]?.id || 'node_3', target: nodes[3]?.id || 'node_4' },
+    {
+      id: 'e12',
+      source: nodes[0]?.id || 'node_1',
+      target: nodes[1]?.id || 'node_2',
+      type: 'smoothstep',
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 20,
+        height: 20,
+        color: '#333',
+      },
+      style: { stroke: '#333', strokeWidth: 2 }
+    },
+    {
+      id: 'e23',
+      source: nodes[1]?.id || 'node_2',
+      target: nodes[2]?.id || 'node_3',
+      type: 'smoothstep',
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 20,
+        height: 20,
+        color: '#333',
+      },
+      style: { stroke: '#333', strokeWidth: 2 }
+    },
+    {
+      id: 'e34',
+      source: nodes[2]?.id || 'node_3',
+      target: nodes[3]?.id || 'node_4',
+      type: 'smoothstep',
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 20,
+        height: 20,
+        color: '#333',
+      },
+      style: { stroke: '#333', strokeWidth: 2 }
+    },
   ]);
 
   const { screenToFlowPosition } = useReactFlow();
@@ -471,7 +508,21 @@ function Canvas() {
 
   // allow drag-connect to create new edges
   const onConnect = useCallback(
-    (params: Edge | Connection) => setEdges((eds) => addEdge(params, eds)),
+    (params: Edge | Connection) => {
+      const newEdge: Edge = {
+        ...params,
+        id: `edge_${Date.now()}`,
+        type: 'smoothstep',
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+          width: 20,
+          height: 20,
+          color: '#333',
+        },
+        style: { stroke: '#333', strokeWidth: 2 }
+      };
+      setEdges((eds) => addEdge(newEdge, eds));
+    },
     [setEdges]
   );
 
