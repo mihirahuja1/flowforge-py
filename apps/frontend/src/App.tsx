@@ -27,6 +27,8 @@ const generateNodeId = () => `node_${nodeIdCounter++}`;
 function TextEditorNode({ data, id }: NodeProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(String(data.label || ''));
+  const [inputHandles, setInputHandles] = useState<number>(Number(data.inputHandles) || 1);
+  const [outputHandles, setOutputHandles] = useState<number>(Number(data.outputHandles) || 1);
 
   const handleDoubleClick = () => {
     setIsEditing(true);
@@ -36,11 +38,33 @@ function TextEditorNode({ data, id }: NodeProps) {
     setIsEditing(false);
     // Update the node data
     data.label = text;
+    data.inputHandles = inputHandles;
+    data.outputHandles = outputHandles;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleBlur();
+    }
+  };
+
+  const addInputHandle = () => {
+    setInputHandles(prev => prev + 1);
+  };
+
+  const removeInputHandle = () => {
+    if (inputHandles > 1) {
+      setInputHandles(prev => prev - 1);
+    }
+  };
+
+  const addOutputHandle = () => {
+    setOutputHandles(prev => prev + 1);
+  };
+
+  const removeOutputHandle = () => {
+    if (outputHandles > 1) {
+      setOutputHandles(prev => prev - 1);
     }
   };
 
@@ -57,33 +81,69 @@ function TextEditorNode({ data, id }: NodeProps) {
         alignItems: 'center',
         justifyContent: 'center',
         cursor: isEditing ? 'text' : 'pointer',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        position: 'relative'
       }}
       onDoubleClick={handleDoubleClick}
     >
-      <Handle type="target" position={Position.Top} />
-      {isEditing ? (
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          autoFocus
+      {/* Input handles */}
+      {Array.from({ length: inputHandles }, (_, index) => (
+        <Handle
+          key={`input-${index}`}
+          type="target"
+          position={Position.Top}
+          id={`input-${index}`}
           style={{
-            border: 'none',
-            outline: 'none',
-            background: 'transparent',
-            textAlign: 'center',
-            fontSize: 14,
-            width: '100%',
-            color: '#000'
+            left: `${(index + 1) * (100 / (inputHandles + 1))}%`,
+            transform: 'translateX(-50%)'
           }}
         />
+      ))}
+
+      {/* Output handles */}
+      {Array.from({ length: outputHandles }, (_, index) => (
+        <Handle
+          key={`output-${index}`}
+          type="source"
+          position={Position.Bottom}
+          id={`output-${index}`}
+          style={{
+            left: `${(index + 1) * (100 / (outputHandles + 1))}%`,
+            transform: 'translateX(-50%)'
+          }}
+        />
+      ))}
+
+      {isEditing ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+          <input
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            autoFocus
+            style={{
+              border: '1px solid #ddd',
+              borderRadius: 4,
+              padding: 4,
+              outline: 'none',
+              textAlign: 'center',
+              fontSize: 14,
+              width: '100%',
+              color: '#000'
+            }}
+          />
+          <div style={{ display: 'flex', gap: 4, fontSize: 10 }}>
+            <button onClick={addInputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>+In</button>
+            <button onClick={removeInputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>-In</button>
+            <button onClick={addOutputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>+Out</button>
+            <button onClick={removeOutputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>-Out</button>
+          </div>
+        </div>
       ) : (
         <span style={{ fontSize: 14, fontWeight: 'bold', color: '#000' }}>{text}</span>
       )}
-      <Handle type="source" position={Position.Bottom} />
     </div>
   );
 }
@@ -92,6 +152,7 @@ function TextEditorNode({ data, id }: NodeProps) {
 function InputNode({ data, id }: NodeProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(String(data.label || ''));
+  const [outputHandles, setOutputHandles] = useState<number>(Number(data.outputHandles) || 1);
 
   const handleDoubleClick = () => {
     setIsEditing(true);
@@ -100,11 +161,22 @@ function InputNode({ data, id }: NodeProps) {
   const handleBlur = () => {
     setIsEditing(false);
     data.label = text;
+    data.outputHandles = outputHandles;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleBlur();
+    }
+  };
+
+  const addOutputHandle = () => {
+    setOutputHandles(prev => prev + 1);
+  };
+
+  const removeOutputHandle = () => {
+    if (outputHandles > 1) {
+      setOutputHandles(prev => prev - 1);
     }
   };
 
@@ -121,32 +193,53 @@ function InputNode({ data, id }: NodeProps) {
         alignItems: 'center',
         justifyContent: 'center',
         cursor: isEditing ? 'text' : 'pointer',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        position: 'relative'
       }}
       onDoubleClick={handleDoubleClick}
     >
-      {isEditing ? (
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          autoFocus
+      {/* Output handles */}
+      {Array.from({ length: outputHandles }, (_, index) => (
+        <Handle
+          key={`output-${index}`}
+          type="source"
+          position={Position.Bottom}
+          id={`output-${index}`}
           style={{
-            border: 'none',
-            outline: 'none',
-            background: 'transparent',
-            textAlign: 'center',
-            fontSize: 14,
-            width: '100%',
-            color: '#000'
+            left: `${(index + 1) * (100 / (outputHandles + 1))}%`,
+            transform: 'translateX(-50%)'
           }}
         />
+      ))}
+
+      {isEditing ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+          <input
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            autoFocus
+            style={{
+              border: '1px solid #ddd',
+              borderRadius: 4,
+              padding: 4,
+              outline: 'none',
+              textAlign: 'center',
+              fontSize: 14,
+              width: '100%',
+              color: '#000'
+            }}
+          />
+          <div style={{ display: 'flex', gap: 4, fontSize: 10 }}>
+            <button onClick={addOutputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>+Out</button>
+            <button onClick={removeOutputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>-Out</button>
+          </div>
+        </div>
       ) : (
         <span style={{ fontSize: 14, fontWeight: 'bold', color: '#000' }}>{text}</span>
       )}
-      <Handle type="source" position={Position.Bottom} />
     </div>
   );
 }
@@ -155,6 +248,7 @@ function InputNode({ data, id }: NodeProps) {
 function OutputNode({ data, id }: NodeProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [text, setText] = useState(String(data.label || ''));
+  const [inputHandles, setInputHandles] = useState<number>(Number(data.inputHandles) || 1);
 
   const handleDoubleClick = () => {
     setIsEditing(true);
@@ -163,11 +257,22 @@ function OutputNode({ data, id }: NodeProps) {
   const handleBlur = () => {
     setIsEditing(false);
     data.label = text;
+    data.inputHandles = inputHandles;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleBlur();
+    }
+  };
+
+  const addInputHandle = () => {
+    setInputHandles(prev => prev + 1);
+  };
+
+  const removeInputHandle = () => {
+    if (inputHandles > 1) {
+      setInputHandles(prev => prev - 1);
     }
   };
 
@@ -184,29 +289,50 @@ function OutputNode({ data, id }: NodeProps) {
         alignItems: 'center',
         justifyContent: 'center',
         cursor: isEditing ? 'text' : 'pointer',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        position: 'relative'
       }}
       onDoubleClick={handleDoubleClick}
     >
-      <Handle type="target" position={Position.Top} />
-      {isEditing ? (
-        <input
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          autoFocus
+      {/* Input handles */}
+      {Array.from({ length: inputHandles }, (_, index) => (
+        <Handle
+          key={`input-${index}`}
+          type="target"
+          position={Position.Top}
+          id={`input-${index}`}
           style={{
-            border: 'none',
-            outline: 'none',
-            background: 'transparent',
-            textAlign: 'center',
-            fontSize: 14,
-            width: '100%',
-            color: '#000'
+            left: `${(index + 1) * (100 / (inputHandles + 1))}%`,
+            transform: 'translateX(-50%)'
           }}
         />
+      ))}
+
+      {isEditing ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center' }}>
+          <input
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            autoFocus
+            style={{
+              border: '1px solid #ddd',
+              borderRadius: 4,
+              padding: 4,
+              outline: 'none',
+              textAlign: 'center',
+              fontSize: 14,
+              width: '100%',
+              color: '#000'
+            }}
+          />
+          <div style={{ display: 'flex', gap: 4, fontSize: 10 }}>
+            <button onClick={addInputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>+In</button>
+            <button onClick={removeInputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>-In</button>
+          </div>
+        </div>
       ) : (
         <span style={{ fontSize: 14, fontWeight: 'bold', color: '#000' }}>{text}</span>
       )}
@@ -219,6 +345,8 @@ function PythonFunctionNode({ data, id }: NodeProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [code, setCode] = useState(String(data.code || 'def function_name():\n    # Your Python code here\n    pass'));
   const [functionName, setFunctionName] = useState(String(data.label || 'Python Function'));
+  const [inputHandles, setInputHandles] = useState<number>(Number(data.inputHandles) || 1);
+  const [outputHandles, setOutputHandles] = useState<number>(Number(data.outputHandles) || 1);
 
   const handleDoubleClick = () => {
     setIsEditing(true);
@@ -228,11 +356,33 @@ function PythonFunctionNode({ data, id }: NodeProps) {
     setIsEditing(false);
     data.code = code;
     data.label = functionName;
+    data.inputHandles = inputHandles;
+    data.outputHandles = outputHandles;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       handleBlur();
+    }
+  };
+
+  const addInputHandle = () => {
+    setInputHandles(prev => prev + 1);
+  };
+
+  const removeInputHandle = () => {
+    if (inputHandles > 1) {
+      setInputHandles(prev => prev - 1);
+    }
+  };
+
+  const addOutputHandle = () => {
+    setOutputHandles(prev => prev + 1);
+  };
+
+  const removeOutputHandle = () => {
+    if (outputHandles > 1) {
+      setOutputHandles(prev => prev - 1);
     }
   };
 
@@ -248,11 +398,24 @@ function PythonFunctionNode({ data, id }: NodeProps) {
         display: 'flex',
         flexDirection: 'column',
         cursor: isEditing ? 'text' : 'pointer',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        position: 'relative'
       }}
       onDoubleClick={handleDoubleClick}
     >
-      <Handle type="target" position={Position.Top} />
+      {/* Input handles */}
+      {Array.from({ length: inputHandles }, (_, index) => (
+        <Handle
+          key={`input-${index}`}
+          type="target"
+          position={Position.Top}
+          id={`input-${index}`}
+          style={{
+            left: `${(index + 1) * (100 / (inputHandles + 1))}%`,
+            transform: 'translateX(-50%)'
+          }}
+        />
+      ))}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <span style={{ fontSize: 16 }}>🐍</span>
@@ -278,24 +441,32 @@ function PythonFunctionNode({ data, id }: NodeProps) {
       </div>
 
       {isEditing ? (
-        <textarea
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          autoFocus
-          style={{
-            border: '1px solid #ddd',
-            borderRadius: 4,
-            padding: 8,
-            fontSize: 12,
-            fontFamily: 'monospace',
-            resize: 'vertical',
-            minHeight: 80,
-            outline: 'none',
-            color: '#000'
-          }}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <textarea
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            autoFocus
+            style={{
+              border: '1px solid #ddd',
+              borderRadius: 4,
+              padding: 8,
+              fontSize: 12,
+              fontFamily: 'monospace',
+              resize: 'vertical',
+              minHeight: 80,
+              outline: 'none',
+              color: '#000'
+            }}
+          />
+          <div style={{ display: 'flex', gap: 4, fontSize: 10 }}>
+            <button onClick={addInputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>+In</button>
+            <button onClick={removeInputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>-In</button>
+            <button onClick={addOutputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>+Out</button>
+            <button onClick={removeOutputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>-Out</button>
+          </div>
+        </div>
       ) : (
         <pre style={{
           fontSize: 12,
@@ -314,7 +485,19 @@ function PythonFunctionNode({ data, id }: NodeProps) {
         </pre>
       )}
 
-      <Handle type="source" position={Position.Bottom} />
+      {/* Output handles */}
+      {Array.from({ length: outputHandles }, (_, index) => (
+        <Handle
+          key={`output-${index}`}
+          type="source"
+          position={Position.Bottom}
+          id={`output-${index}`}
+          style={{
+            left: `${(index + 1) * (100 / (outputHandles + 1))}%`,
+            transform: 'translateX(-50%)'
+          }}
+        />
+      ))}
     </div>
   );
 }
@@ -325,6 +508,8 @@ function LLMCallNode({ data, id }: NodeProps) {
   const [prompt, setPrompt] = useState(String(data.prompt || 'Enter your prompt here...'));
   const [model, setModel] = useState(String(data.model || 'gpt-3.5-turbo'));
   const [nodeName, setNodeName] = useState(String(data.label || 'LLM Call'));
+  const [inputHandles, setInputHandles] = useState<number>(Number(data.inputHandles) || 1);
+  const [outputHandles, setOutputHandles] = useState<number>(Number(data.outputHandles) || 1);
 
   const handleDoubleClick = () => {
     setIsEditing(true);
@@ -335,11 +520,33 @@ function LLMCallNode({ data, id }: NodeProps) {
     data.prompt = prompt;
     data.model = model;
     data.label = nodeName;
+    data.inputHandles = inputHandles;
+    data.outputHandles = outputHandles;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape') {
       handleBlur();
+    }
+  };
+
+  const addInputHandle = () => {
+    setInputHandles(prev => prev + 1);
+  };
+
+  const removeInputHandle = () => {
+    if (inputHandles > 1) {
+      setInputHandles(prev => prev - 1);
+    }
+  };
+
+  const addOutputHandle = () => {
+    setOutputHandles(prev => prev + 1);
+  };
+
+  const removeOutputHandle = () => {
+    if (outputHandles > 1) {
+      setOutputHandles(prev => prev - 1);
     }
   };
 
@@ -355,11 +562,24 @@ function LLMCallNode({ data, id }: NodeProps) {
         display: 'flex',
         flexDirection: 'column',
         cursor: isEditing ? 'text' : 'pointer',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        position: 'relative'
       }}
       onDoubleClick={handleDoubleClick}
     >
-      <Handle type="target" position={Position.Top} />
+      {/* Input handles */}
+      {Array.from({ length: inputHandles }, (_, index) => (
+        <Handle
+          key={`input-${index}`}
+          type="target"
+          position={Position.Top}
+          id={`input-${index}`}
+          style={{
+            left: `${(index + 1) * (100 / (inputHandles + 1))}%`,
+            transform: 'translateX(-50%)'
+          }}
+        />
+      ))}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <span style={{ fontSize: 16 }}>🤖</span>
@@ -420,6 +640,12 @@ function LLMCallNode({ data, id }: NodeProps) {
               color: '#000'
             }}
           />
+          <div style={{ display: 'flex', gap: 4, fontSize: 10 }}>
+            <button onClick={addInputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>+In</button>
+            <button onClick={removeInputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>-In</button>
+            <button onClick={addOutputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>+Out</button>
+            <button onClick={removeOutputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>-Out</button>
+          </div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -439,7 +665,256 @@ function LLMCallNode({ data, id }: NodeProps) {
         </div>
       )}
 
-      <Handle type="source" position={Position.Bottom} />
+      {/* Output handles */}
+      {Array.from({ length: outputHandles }, (_, index) => (
+        <Handle
+          key={`output-${index}`}
+          type="source"
+          position={Position.Bottom}
+          id={`output-${index}`}
+          style={{
+            left: `${(index + 1) * (100 / (outputHandles + 1))}%`,
+            transform: 'translateX(-50%)'
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Curl Node
+function CurlNode({ data, id }: NodeProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [url, setUrl] = useState(String(data.url || 'https://api.example.com/endpoint'));
+  const [method, setMethod] = useState(String(data.method || 'GET'));
+  const [headers, setHeaders] = useState(String(data.headers || '{}'));
+  const [body, setBody] = useState(String(data.body || ''));
+  const [nodeName, setNodeName] = useState(String(data.label || 'Curl Request'));
+  const [inputHandles, setInputHandles] = useState<number>(Number(data.inputHandles) || 1);
+  const [outputHandles, setOutputHandles] = useState<number>(Number(data.outputHandles) || 1);
+
+  const handleDoubleClick = () => {
+    setIsEditing(true);
+  };
+
+  const handleBlur = () => {
+    setIsEditing(false);
+    data.url = url;
+    data.method = method;
+    data.headers = headers;
+    data.body = body;
+    data.label = nodeName;
+    data.inputHandles = inputHandles;
+    data.outputHandles = outputHandles;
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      handleBlur();
+    }
+  };
+
+  const addInputHandle = () => {
+    setInputHandles(prev => prev + 1);
+  };
+
+  const removeInputHandle = () => {
+    if (inputHandles > 1) {
+      setInputHandles(prev => prev - 1);
+    }
+  };
+
+  const addOutputHandle = () => {
+    setOutputHandles(prev => prev + 1);
+  };
+
+  const removeOutputHandle = () => {
+    if (outputHandles > 1) {
+      setOutputHandles(prev => prev - 1);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        background: '#fff3e0',
+        border: '2px solid #ff9800',
+        borderRadius: 8,
+        padding: 12,
+        minWidth: 200,
+        minHeight: 120,
+        display: 'flex',
+        flexDirection: 'column',
+        cursor: isEditing ? 'text' : 'pointer',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        position: 'relative'
+      }}
+      onDoubleClick={handleDoubleClick}
+    >
+      {/* Input handles */}
+      {Array.from({ length: inputHandles }, (_, index) => (
+        <Handle
+          key={`input-${index}`}
+          type="target"
+          position={Position.Top}
+          id={`input-${index}`}
+          style={{
+            left: `${(index + 1) * (100 / (inputHandles + 1))}%`,
+            transform: 'translateX(-50%)'
+          }}
+        />
+      ))}
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <span style={{ fontSize: 16 }}>🌐</span>
+        {isEditing ? (
+          <input
+            type="text"
+            value={nodeName}
+            onChange={(e) => setNodeName(e.target.value)}
+            onBlur={handleBlur}
+            style={{
+              border: 'none',
+              outline: 'none',
+              background: 'transparent',
+              fontSize: 14,
+              fontWeight: 'bold',
+              flex: 1,
+              color: '#000'
+            }}
+          />
+        ) : (
+          <span style={{ fontSize: 14, fontWeight: 'bold', color: '#000' }}>{nodeName}</span>
+        )}
+      </div>
+
+      {isEditing ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <select
+              value={method}
+              onChange={(e) => setMethod(e.target.value)}
+              style={{
+                border: '1px solid #ddd',
+                borderRadius: 4,
+                padding: 4,
+                fontSize: 12,
+                outline: 'none',
+                color: '#000',
+                width: '80px'
+              }}
+            >
+              <option value="GET">GET</option>
+              <option value="POST">POST</option>
+              <option value="PUT">PUT</option>
+              <option value="DELETE">DELETE</option>
+              <option value="PATCH">PATCH</option>
+            </select>
+            <input
+              type="text"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              placeholder="URL"
+              style={{
+                border: '1px solid #ddd',
+                borderRadius: 4,
+                padding: 4,
+                fontSize: 12,
+                outline: 'none',
+                color: '#000',
+                flex: 1
+              }}
+            />
+          </div>
+          <textarea
+            value={headers}
+            onChange={(e) => setHeaders(e.target.value)}
+            placeholder="Headers (JSON format)"
+            style={{
+              border: '1px solid #ddd',
+              borderRadius: 4,
+              padding: 8,
+              fontSize: 12,
+              resize: 'vertical',
+              minHeight: 40,
+              outline: 'none',
+              color: '#000',
+              fontFamily: 'monospace'
+            }}
+          />
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Request body (for POST/PUT/PATCH)"
+            style={{
+              border: '1px solid #ddd',
+              borderRadius: 4,
+              padding: 8,
+              fontSize: 12,
+              resize: 'vertical',
+              minHeight: 40,
+              outline: 'none',
+              color: '#000',
+              fontFamily: 'monospace'
+            }}
+          />
+          <div style={{ display: 'flex', gap: 4, fontSize: 10 }}>
+            <button onClick={addInputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>+In</button>
+            <button onClick={removeInputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>-In</button>
+            <button onClick={addOutputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>+Out</button>
+            <button onClick={removeOutputHandle} style={{ padding: '2px 4px', fontSize: 10 }}>-Out</button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{
+              fontSize: 10,
+              fontWeight: 'bold',
+              padding: '2px 6px',
+              background: '#ff9800',
+              color: 'white',
+              borderRadius: '4px'
+            }}>
+              {method}
+            </span>
+            <span style={{ fontSize: 10, color: '#666' }}>
+              {url.substring(0, 30)}{url.length > 30 ? '...' : ''}
+            </span>
+          </div>
+          <div style={{
+            fontSize: 12,
+            background: '#f5f5f5',
+            padding: 8,
+            borderRadius: 4,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxHeight: 60,
+            color: '#000'
+          }}>
+            {headers !== '{}' ? `Headers: ${headers.substring(0, 40)}${headers.length > 40 ? '...' : ''}` : 'No headers'}
+            {body && (
+              <div style={{ marginTop: 4 }}>
+                Body: {body.substring(0, 30)}{body.length > 30 ? '...' : ''}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Output handles */}
+      {Array.from({ length: outputHandles }, (_, index) => (
+        <Handle
+          key={`output-${index}`}
+          type="source"
+          position={Position.Bottom}
+          id={`output-${index}`}
+          style={{
+            left: `${(index + 1) * (100 / (outputHandles + 1))}%`,
+            transform: 'translateX(-50%)'
+          }}
+        />
+      ))}
     </div>
   );
 }
@@ -451,6 +926,7 @@ const nodeTypes = {
   output: OutputNode,
   pythonFunction: PythonFunctionNode,
   llmCall: LLMCallNode,
+  curl: CurlNode,
 };
 
 function Canvas() {

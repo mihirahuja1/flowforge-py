@@ -49,6 +49,24 @@ export default function Sidebar() {
 
             <div
                 draggable
+                onDragStart={(e) => e.dataTransfer.setData('node-type', 'curl')}
+                style={{
+                    padding: 12,
+                    border: '2px dashed #ff9800',
+                    borderRadius: 8,
+                    cursor: 'grab',
+                    backgroundColor: '#fff3e0',
+                    textAlign: 'center',
+                    fontWeight: 'bold',
+                    color: '#e65100',
+                    transition: 'all 0.2s ease'
+                }}
+            >
+                🌐 Curl Request
+            </div>
+
+            <div
+                draggable
                 onDragStart={(e) => e.dataTransfer.setData('node-type', 'textEditor')}
                 style={{
                     padding: 12,
